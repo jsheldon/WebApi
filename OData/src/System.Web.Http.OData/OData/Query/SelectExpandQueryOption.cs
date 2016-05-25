@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Web.Http.OData.Properties;
 using System.Web.Http.OData.Query.Expressions;
+using System.Web.Http.OData.Query.Translator;
 using System.Web.Http.OData.Query.Validators;
 using Microsoft.Data.Edm;
 using Microsoft.Data.OData.Query;
@@ -19,6 +20,7 @@ namespace System.Web.Http.OData.Query
     {
         private SelectExpandClause _selectExpandClause;
         private IEdmEntityType _entityType;
+        private IQueryTranslator _queryTranslator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectExpandQueryOption"/> class.
@@ -26,7 +28,8 @@ namespace System.Web.Http.OData.Query
         /// <param name="select">The $select query parameter value.</param>
         /// <param name="expand">The $expand query parameter value.</param>
         /// <param name="context">The <see cref="ODataQueryContext"/> which contains the <see cref="IEdmModel"/> and some type information.</param>
-        public SelectExpandQueryOption(string select, string expand, ODataQueryContext context)
+        /// <param name="queryTranslator"></param>
+        public SelectExpandQueryOption(string select, string expand, ODataQueryContext context, IQueryTranslator queryTranslator)
         {
             if (context == null)
             {
@@ -46,6 +49,7 @@ namespace System.Web.Http.OData.Query
 
             _entityType = entityType;
 
+            _queryTranslator = queryTranslator;
             Context = context;
             RawSelect = select;
             RawExpand = expand;
@@ -170,6 +174,17 @@ namespace System.Web.Http.OData.Query
             {
                 Validator.Validate(this, validationSettings);
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="querySettings"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public IQueryable<TSource> Translate<TSource>(IQueryable<TSource> result, ODataQuerySettings querySettings)
+        {
+            return result;
         }
     }
 }

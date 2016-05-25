@@ -15,6 +15,7 @@ using System.Web.Http.Dispatcher;
 using System.Web.Http.OData.Extensions;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Properties;
+using System.Web.Http.OData.Query.Translator;
 using System.Web.Http.OData.Query.Validators;
 using Microsoft.Data.Edm;
 using Microsoft.Data.OData;
@@ -41,6 +42,8 @@ namespace System.Web.Http.OData.Query
 
         private bool _etagIfNoneMatchChecked;
 
+        private IQueryTranslator _queryTranslator;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ODataQueryOptions"/> class based on the incoming request and some metadata information from
         /// the <see cref="ODataQueryContext"/>.
@@ -64,6 +67,12 @@ namespace System.Web.Http.OData.Query
                 _assembliesResolver = request.GetConfiguration().Services.GetAssembliesResolver();
             }
 
+            var dependencyScope = request.GetDependencyScope();
+            if (dependencyScope != null)
+            {
+                _queryTranslator = (IQueryTranslator)dependencyScope.GetService(typeof(IQueryTranslator));
+            }
+
             // fallback to the default assemblies resolver if none available.
             _assembliesResolver = _assembliesResolver ?? new DefaultAssembliesResolver();
 
@@ -81,12 +90,12 @@ namespace System.Web.Http.OData.Query
                     case "$filter":
                         RawValues.Filter = kvp.Value;
                         ThrowIfEmpty(kvp.Value, "$filter");
-                        Filter = new FilterQueryOption(kvp.Value, context);
+                        Filter = new FilterQueryOption(kvp.Value, context, _queryTranslator);
                         break;
                     case "$orderby":
                         RawValues.OrderBy = kvp.Value;
                         ThrowIfEmpty(kvp.Value, "$orderby");
-                        OrderBy = new OrderByQueryOption(kvp.Value, context);
+                        OrderBy = new OrderByQueryOption(kvp.Value, context, _queryTranslator);
                         break;
                     case "$top":
                         RawValues.Top = kvp.Value;
@@ -123,7 +132,7 @@ namespace System.Web.Http.OData.Query
 
             if (RawValues.Select != null || RawValues.Expand != null)
             {
-                SelectExpand = new SelectExpandQueryOption(RawValues.Select, RawValues.Expand, context);
+                SelectExpand = new SelectExpandQueryOption(RawValues.Select, RawValues.Expand, context, _queryTranslator);
             }
 
             Validator = new ODataQueryValidator();
@@ -238,6 +247,17 @@ namespace System.Web.Http.OData.Query
         }
 
         /// <summary>
+        /// </summary>
+        /// <param name="query"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TDestination"></typeparam>
+        /// <returns></returns>
+        public virtual IQueryable<TSource> ApplyWithTranslationsTo<TSource, TDestination>(IQueryable<TSource> query)
+        {
+            return ApplyWithTranslationsTo<TSource, TDestination>(query, new ODataQuerySettings());
+        }
+
+        /// <summary>
         /// Apply the individual query to the given IQueryable in the right order.
         /// </summary>
         /// <param name="query">The original <see cref="IQueryable"/>.</param>
@@ -245,6 +265,99 @@ namespace System.Web.Http.OData.Query
         public virtual IQueryable ApplyTo(IQueryable query)
         {
             return ApplyTo(query, new ODataQuerySettings());
+        }
+
+
+        /// <summary>
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="querySettings"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TDestination"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public virtual IQueryable<TSource> ApplyWithTranslationsTo<TSource, TDestination>(IQueryable<TSource> query, ODataQuerySettings querySettings)
+        {
+            if (query == null)
+            {
+                throw Error.ArgumentNull("query");
+            }
+
+            if (querySettings == null)
+            {
+                throw Error.ArgumentNull("querySettings");
+            }
+
+            IQueryable<TSource> result = query;
+
+            // Construct the actual query and apply them in the following order: filter, orderby, skip, top
+            if (Filter != null)
+            {
+                result = Filter.Translate<TSource, TDestination>(result, querySettings, _assembliesResolver);
+            }
+
+            if (InlineCount != null && Request.ODataProperties().TotalCount == null)
+            {
+                long? count = InlineCount.GetEntityCount(result);
+
+                if (count.HasValue)
+                {
+                    Request.ODataProperties().TotalCount = count.Value;
+                }
+            }
+
+            OrderByQueryOption orderBy = OrderBy;
+
+            // $skip or $top require a stable sort for predictable results.
+            // Result limits require a stable sort to be able to generate a next page link.
+            // If either is present in the query and we have permission,
+            // generate an $orderby that will produce a stable sort.
+            if (querySettings.EnsureStableOrdering && (Skip != null || Top != null || querySettings.PageSize.HasValue))
+            {
+                // If there is no OrderBy present, we manufacture a default.
+                // If an OrderBy is already present, we add any missing
+                // properties necessary to make a stable sort.
+                // Instead of failing early here if we cannot generate the OrderBy,
+                // let the IQueryable backend fail (if it has to).
+                orderBy = orderBy == null
+                            ? GenerateDefaultOrderBy(Context)
+                            : EnsureStableSortOrderBy(orderBy, Context);
+            }
+
+            if (orderBy != null)
+            {
+                result = OrderBy.Translate<TSource, TDestination>(result, querySettings);
+            }
+
+            if (Skip != null)
+            {
+                result = Skip.Translate(result, querySettings);
+            }
+
+            if (Top != null)
+            {
+                result = Top.Translate(result, querySettings);
+            }
+
+            if (SelectExpand != null)
+            {
+                throw new Exception("The select command is currently unsupported");
+                //Request.ODataProperties().SelectExpandClause = SelectExpand.SelectExpandClause;
+                //result = SelectExpand.Translate(result, querySettings);
+            }
+
+            if (querySettings.PageSize.HasValue)
+            {
+                bool resultsLimited;
+                result = LimitResults(result, querySettings.PageSize.Value, out resultsLimited);
+                if (resultsLimited && Request.RequestUri != null && Request.RequestUri.IsAbsoluteUri && Request.ODataProperties().NextLink == null)
+                {
+                    Uri nextPageLink = GetNextPageLink(Request, querySettings.PageSize.Value);
+                    Request.ODataProperties().NextLink = nextPageLink;
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -426,12 +539,10 @@ namespace System.Web.Http.OData.Query
         // This may return a null if there are no available properties.
         private static OrderByQueryOption GenerateDefaultOrderBy(ODataQueryContext context)
         {
-            string orderByRaw = String.Join(",",
-                                    GetAvailableOrderByProperties(context)
-                                        .Select(property => property.Name));
+            string orderByRaw = String.Join(",", GetAvailableOrderByProperties(context).Select(property => property.Name));
             return String.IsNullOrEmpty(orderByRaw)
                     ? null
-                    : new OrderByQueryOption(orderByRaw, context);
+                    : new OrderByQueryOption(orderByRaw, context, null);
         }
 
         /// <summary>
@@ -462,7 +573,7 @@ namespace System.Web.Http.OData.Query
                 // Clone the given one and add the remaining properties to end, thereby making
                 // the sort stable but preserving the user's original intent for the major
                 // sort order.
-                orderBy = new OrderByQueryOption(orderBy.RawValue, context);
+                orderBy = new OrderByQueryOption(orderBy.RawValue, context, null);
                 foreach (IEdmStructuralProperty property in propertiesToAdd)
                 {
                     orderBy.OrderByNodes.Add(new OrderByPropertyNode(property, OrderByDirection.Ascending));

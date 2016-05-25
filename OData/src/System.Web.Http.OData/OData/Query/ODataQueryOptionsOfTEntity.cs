@@ -83,6 +83,34 @@ namespace System.Web.Http.OData.Query
             return base.ApplyTo(query, querySettings);
         }
 
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+        public override IQueryable<TSource> ApplyWithTranslationsTo<TSource, TDestination>(IQueryable<TSource> query)
+        {
+            ValidateTranslation(query);
+            return base.ApplyWithTranslationsTo<TSource, TDestination>(query);
+        }
+
+        private void ValidateTranslation<TDestination>(IQueryable<TDestination> query)
+        {
+            // Not Implemented
+        }
+
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <param name="querySettings">The settings to use in query composition.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+        public override IQueryable<TSource> ApplyWithTranslationsTo<TSource, TDestination>(IQueryable<TSource> query, ODataQuerySettings querySettings)
+        {
+            ValidateTranslation(query);
+            return base.ApplyWithTranslationsTo<TSource, TDestination>(query, querySettings);
+        }
+
         internal override ETag GetETag(EntityTagHeaderValue etagHeaderValue)
         {
             return Request.GetETag<TEntity>(etagHeaderValue);

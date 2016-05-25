@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.OData.Properties;
 using System.Web.Http.OData.Query.Expressions;
+using System.Web.Http.OData.Query.Translator;
 using System.Web.Http.OData.Query.Validators;
 using Microsoft.Data.Edm;
 using Microsoft.Data.OData.Query;
@@ -21,6 +22,7 @@ namespace System.Web.Http.OData.Query
     {
         private static readonly IAssembliesResolver _defaultAssembliesResolver = new DefaultAssembliesResolver();
         private FilterClause _filterClause;
+        private IQueryTranslator _queryTranslator;
 
         /// <summary>
         /// Initialize a new instance of <see cref="FilterQueryOption"/> based on the raw $filter value and 
@@ -28,7 +30,8 @@ namespace System.Web.Http.OData.Query
         /// </summary>
         /// <param name="rawValue">The raw value for $filter query. It can be null or empty.</param>
         /// <param name="context">The <see cref="ODataQueryContext"/> which contains the <see cref="IEdmModel"/> and some type information</param>
-        public FilterQueryOption(string rawValue, ODataQueryContext context)
+        /// <param name="queryTranslator"></param>
+        public FilterQueryOption(string rawValue, ODataQueryContext context, IQueryTranslator queryTranslator)
         {
             if (context == null)
             {
@@ -40,6 +43,7 @@ namespace System.Web.Http.OData.Query
                 throw Error.ArgumentNullOrEmpty("rawValue");
             }
 
+            _queryTranslator = queryTranslator;
             Context = context;
             RawValue = rawValue;
             Validator = new FilterQueryValidator();
@@ -136,6 +140,56 @@ namespace System.Web.Http.OData.Query
             query = ExpressionHelpers.Where(query, filter, Context.ElementClrType);
             return query;
         }
+
+
+        /// <summary>
+        /// </summary>
+        /// <param name="query"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TDestination"></typeparam>
+        /// <returns></returns>
+        public IQueryable<TSource> Translate<TSource, TDestination>(IQueryable<TSource> query)
+        {
+            return Translate<TSource, TDestination>(query, new ODataQuerySettings(), _defaultAssembliesResolver);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="querySettings"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TDestination"></typeparam>
+        /// <returns></returns>
+        public IQueryable<TSource> Translate<TSource, TDestination>(IQueryable<TSource> query, ODataQuerySettings querySettings)
+        {
+            return Translate<TSource, TDestination>(query, querySettings, _defaultAssembliesResolver);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="querySettings"></param>
+        /// <param name="assembliesResolver"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TDestination"></typeparam>
+        /// <returns></returns>
+        public IQueryable<TSource> Translate<TSource, TDestination>(IQueryable<TSource> query, ODataQuerySettings querySettings, IAssembliesResolver assembliesResolver)
+        {
+            var translator = new ExpressionTranslator<TSource, TDestination>(_queryTranslator);
+            var translatedFilter = translator.TranslateFilter(FilterClause.Expression);
+
+            ODataQuerySettings updatedSettings = querySettings;
+            if (querySettings.HandleNullPropagation == HandleNullPropagationOption.Default)
+            {
+                updatedSettings = new ODataQuerySettings(updatedSettings);
+                updatedSettings.HandleNullPropagation = HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(query);
+            }
+
+            Expression filter = FilterBinder.Bind(translatedFilter, typeof(TSource), Context.Model, assembliesResolver, updatedSettings);
+            query = ExpressionHelpers.Where(query, filter, typeof(TSource)) as IQueryable<TSource>;
+            return query;
+        }
+
 
         /// <summary>
         /// Validate the filter query based on the given <paramref name="validationSettings"/>. It throws an ODataException if validation failed.

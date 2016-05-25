@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Web.Http.OData.Properties;
 using System.Web.Http.OData.Query.Expressions;
+using System.Web.Http.OData.Query.Translator;
 using System.Web.Http.OData.Query.Validators;
 using Microsoft.Data.Edm;
 using Microsoft.Data.OData;
@@ -19,6 +20,7 @@ namespace System.Web.Http.OData.Query
     /// </summary>
     public class OrderByQueryOption
     {
+        private IQueryTranslator _queryTranslator;
         private OrderByClause _orderByClause;
         private IList<OrderByNode> _orderByNodes;
 
@@ -28,7 +30,8 @@ namespace System.Web.Http.OData.Query
         /// </summary>
         /// <param name="rawValue">The raw value for $orderby query. It can be null or empty.</param>
         /// <param name="context">The <see cref="ODataQueryContext"/> which contains the <see cref="IEdmModel"/> and some type information</param>
-        public OrderByQueryOption(string rawValue, ODataQueryContext context)
+        /// <param name="queryTranslator"></param>
+        public OrderByQueryOption(string rawValue, ODataQueryContext context, IQueryTranslator queryTranslator)
         {
             if (context == null)
             {
@@ -40,6 +43,7 @@ namespace System.Web.Http.OData.Query
                 throw Error.ArgumentNullOrEmpty("rawValue");
             }
 
+            _queryTranslator = queryTranslator;
             Context = context;
             RawValue = rawValue;
             Validator = new OrderByQueryValidator();
@@ -133,6 +137,27 @@ namespace System.Web.Http.OData.Query
         }
 
         /// <summary>
+        /// Apply the $orderby query to the given IQueryable.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the orderby query has been applied to.</returns>
+        public IOrderedQueryable<TSource> Translate<TSource, TDestination>(IQueryable<TSource> query)
+        {
+            return TranslateCore<TSource, TDestination>(query, new ODataQuerySettings()) as IOrderedQueryable<TSource>;
+        }
+
+        /// <summary>
+        /// Apply the $orderby query to the given IQueryable.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <param name="querySettings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the orderby query has been applied to.</returns>
+        public IOrderedQueryable<TSource> Translate<TSource, TDestination>(IQueryable<TSource> query, ODataQuerySettings querySettings)
+        {
+            return TranslateCore<TSource, TDestination>(query, querySettings) as IOrderedQueryable<TSource>;
+        }
+
+        /// <summary>
         /// Validate the orderby query based on the given <paramref name="validationSettings"/>. It throws an ODataException if validation failed.
         /// </summary>
         /// <param name="validationSettings">The <see cref="ODataValidationSettings"/> instance which contains all the validation settings.</param>
@@ -215,6 +240,78 @@ namespace System.Web.Http.OData.Query
             }
 
             return querySoFar as IOrderedQueryable;
+        }
+
+
+        private IOrderedQueryable<TSource> TranslateCore<TSource, TDestination>(IQueryable<TSource> query, ODataQuerySettings querySettings)
+        {
+            if (Context.ElementClrType == null)
+            {
+                throw Error.NotSupported(SRResources.ApplyToOnUntypedQueryOption, "ApplyTo");
+            }
+
+            ICollection<OrderByNode> nodes = OrderByNodes;
+
+            bool alreadyOrdered = false;
+            IQueryable<TSource> querySoFar = query;
+
+            HashSet<IEdmProperty> propertiesSoFar = new HashSet<IEdmProperty>();
+            bool orderByItSeen = false;
+
+            foreach (OrderByNode node in nodes)
+            {
+                OrderByPropertyNode propertyNode = node as OrderByPropertyNode;
+
+                if (propertyNode != null)
+                {
+                    IEdmProperty property = propertyNode.Property;
+                    OrderByDirection direction = propertyNode.Direction;
+
+                    // This check prevents queries with duplicate properties (e.g. $orderby=Id,Id,Id,Id...) from causing stack overflows
+                    if (propertiesSoFar.Contains(property))
+                    {
+                        throw new ODataException(Error.Format(SRResources.OrderByDuplicateProperty, property.Name));
+                    }
+                    propertiesSoFar.Add(property);
+
+                    if (propertyNode.OrderByClause != null)
+                    {
+                        var translator = new ExpressionTranslator<TSource, TDestination>(_queryTranslator);
+                        var translatedOrder = translator.TranslateOrder(propertyNode.OrderByClause);
+                        var model = translator.GetEdmModel();
+
+                        // Ensure we have decided how to handle null propagation
+                        ODataQuerySettings updatedSettings = querySettings;
+                        if (querySettings.HandleNullPropagation == HandleNullPropagationOption.Default)
+                        {
+                            updatedSettings = new ODataQuerySettings(updatedSettings);
+                            updatedSettings.HandleNullPropagation = HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(query);
+                        }
+
+                        LambdaExpression orderByExpression = FilterBinder.Bind(translatedOrder, typeof(TSource), model, updatedSettings);
+                        querySoFar = ExpressionHelpers.OrderBy(querySoFar, orderByExpression, direction, typeof(TSource), alreadyOrdered) as IQueryable<TSource>;
+                    }
+                    else
+                    {
+                        querySoFar = ExpressionHelpers.OrderByProperty(querySoFar, property, direction, typeof(TSource), alreadyOrdered) as IQueryable<TSource>;
+                    }
+                    alreadyOrdered = true;
+                }
+                else
+                {
+                    // This check prevents queries with duplicate nodes (e.g. $orderby=$it,$it,$it,$it...) from causing stack overflows
+                    if (orderByItSeen)
+                    {
+                        throw new ODataException(Error.Format(SRResources.OrderByDuplicateIt));
+                    }
+
+                    querySoFar = ExpressionHelpers.OrderByIt(querySoFar, node.Direction, typeof(TSource), alreadyOrdered) as IQueryable<TSource>;
+                    alreadyOrdered = true;
+                    orderByItSeen = true;
+                }
+            }
+
+            return querySoFar as IOrderedQueryable<TSource>;
         }
     }
 }

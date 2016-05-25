@@ -127,5 +127,16 @@ namespace System.Web.Http.OData.Query
 
             return ExpressionHelpers.Skip(query, Value, Context.ElementClrType, querySettings.EnableConstantParameterization);
         }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="querySettings"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public IQueryable<TSource> Translate<TSource>(IQueryable<TSource> result, ODataQuerySettings querySettings)
+        {
+            return result;
+        }
     }
 }
