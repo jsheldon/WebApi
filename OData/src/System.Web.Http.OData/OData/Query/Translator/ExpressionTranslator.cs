@@ -133,7 +133,7 @@ namespace System.Web.Http.OData.Query
                     break;
             }
 
-            sb.AppendFormat($" {oper} ");
+            sb.Append($" {oper} ");
         }
 
         private void Visit(ref StringBuilder sb, QueryNode node)
