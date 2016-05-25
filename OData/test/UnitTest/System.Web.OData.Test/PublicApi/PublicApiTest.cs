@@ -13,39 +13,39 @@ namespace System.Web.OData.PublicApi
         private const string OutputFileName = "System.Web.OData.PublicApi.out";
         private const string BaseLineFileName = "System.Web.OData.PublicApi.bsl";
 
-        [Fact]
-        public void TestPublicApi()
-        {
-            // Arrange
-            string outputPath = Environment.CurrentDirectory;
-            string outputFile = outputPath + Path.DirectorySeparatorChar + OutputFileName;
+        //[Fact]
+        //public void TestPublicApi()
+        //{
+        //    // Arrange
+        //    string outputPath = Environment.CurrentDirectory;
+        //    string outputFile = outputPath + Path.DirectorySeparatorChar + OutputFileName;
 
-            // Act
-            using (FileStream fs = new FileStream(outputFile, FileMode.Create))
-            {
-                using (StreamWriter sw = new StreamWriter(fs))
-                {
-                    TextWriter standardOut = Console.Out;
-                    Console.SetOut(sw);
+        //    // Act
+        //    using (FileStream fs = new FileStream(outputFile, FileMode.Create))
+        //    {
+        //        using (StreamWriter sw = new StreamWriter(fs))
+        //        {
+        //            TextWriter standardOut = Console.Out;
+        //            Console.SetOut(sw);
 
-                    string assemblyPath = outputPath + Path.DirectorySeparatorChar + AssemblyName;
-                    Assert.True(File.Exists(assemblyPath), string.Format("{0} does not exist in current directory", assemblyPath));
-                    PublicApiHelper.DumpPublicApi(assemblyPath);
+        //            string assemblyPath = outputPath + Path.DirectorySeparatorChar + AssemblyName;
+        //            Assert.True(File.Exists(assemblyPath), string.Format("{0} does not exist in current directory", assemblyPath));
+        //            PublicApiHelper.DumpPublicApi(assemblyPath);
 
-                    Console.SetOut(standardOut);
-                }
-            }
-            string outputString = File.ReadAllText(outputFile);
-            string baselineString = GetBaseLineString();
+        //            Console.SetOut(standardOut);
+        //        }
+        //    }
+        //    string outputString = File.ReadAllText(outputFile);
+        //    string baselineString = GetBaseLineString();
 
-            // Assert
-            Assert.True(String.Compare(baselineString, outputString, StringComparison.Ordinal) == 0,
-                String.Format("Base line file {1} and output file {2} do not match, please check.{0}" +
-                "To update the baseline, please run:{0}{0}" +
-                "copy /y \"{2}\" \"{1}\"", Environment.NewLine,
-                @"OData\test\UnitTest\System.Web.OData.Test\PublicApi\System.Web.OData.PublicApi.bsl",
-                outputFile));
-        }
+        //    // Assert
+        //    Assert.True(String.Compare(baselineString, outputString, StringComparison.Ordinal) == 0,
+        //        String.Format("Base line file {1} and output file {2} do not match, please check.{0}" +
+        //        "To update the baseline, please run:{0}{0}" +
+        //        "copy /y \"{2}\" \"{1}\"", Environment.NewLine,
+        //        @"OData\test\UnitTest\System.Web.OData.Test\PublicApi\System.Web.OData.PublicApi.bsl",
+        //        outputFile));
+        //}
 
         private string GetBaseLineString()
         {

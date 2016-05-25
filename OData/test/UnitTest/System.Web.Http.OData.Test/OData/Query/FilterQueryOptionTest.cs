@@ -187,7 +187,7 @@ namespace System.Web.Http.OData.Query
         public void ConstructorNullContextThrows()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                new FilterQueryOption("Name eq 'MSFT'", null));
+                new FilterQueryOption("Name eq 'MSFT'", null, null));
         }
 
         [Fact]
@@ -196,7 +196,7 @@ namespace System.Web.Http.OData.Query
             var model = new ODataModelBuilder().Add_Customer_EntityType().Add_Customers_EntitySet().GetEdmModel();
 
             Assert.Throws<ArgumentException>(() =>
-                new FilterQueryOption(null, new ODataQueryContext(model, typeof(Customer))));
+                new FilterQueryOption(null, new ODataQueryContext(model, typeof(Customer)), null));
         }
 
         [Fact]
@@ -205,7 +205,7 @@ namespace System.Web.Http.OData.Query
             var model = new ODataModelBuilder().Add_Customer_EntityType().Add_Customers_EntitySet().GetEdmModel();
 
             Assert.Throws<ArgumentException>(() =>
-                new FilterQueryOption(string.Empty, new ODataQueryContext(model, typeof(Customer))));
+                new FilterQueryOption(string.Empty, new ODataQueryContext(model, typeof(Customer)), null));
         }
 
         [Theory]
@@ -215,7 +215,7 @@ namespace System.Web.Http.OData.Query
         {
             var model = new ODataModelBuilder().Add_Customer_EntityType().Add_Customers_EntitySet().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption(filterValue, context);
+            var filter = new FilterQueryOption(filterValue, context, null);
 
             Assert.Same(context, filter.Context);
             Assert.Equal(filterValue, filter.RawValue);
@@ -226,7 +226,7 @@ namespace System.Web.Http.OData.Query
         {
             var model = new ODataModelBuilder().Add_Customer_EntityType().Add_Customers_EntitySet().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption("Name eq 'MSFT'", context);
+            var filter = new FilterQueryOption("Name eq 'MSFT'", context, null);
             var node = filter.FilterClause;
 
             Assert.Equal(QueryNodeKind.BinaryOperator, node.Expression.Kind);
@@ -244,7 +244,7 @@ namespace System.Web.Http.OData.Query
         {
             var model = new ODataModelBuilder().Add_Customer_EntityType_With_CollectionProperties().Add_Customers_EntitySet().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption("Aliases/any(a: a eq 'alias')", context);
+            var filter = new FilterQueryOption("Aliases/any(a: a eq 'alias')", context, null);
             var node = filter.FilterClause;
             var anyNode = node.Expression as AnyNode;
             var aParameter = anyNode.RangeVariables.SingleOrDefault(p => p.Name == "a");
@@ -261,7 +261,7 @@ namespace System.Web.Http.OData.Query
         {
             var model = new ODataModelBuilder().Add_Customer_EntityType_With_CollectionProperties().Add_Customers_EntitySet().Add_Address_ComplexType().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context);
+            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context, null);
             var node = filter.FilterClause;
             var anyNode = node.Expression as AnyNode;
             var aParameter = anyNode.RangeVariables.SingleOrDefault(p => p.Name == "a");
@@ -278,7 +278,7 @@ namespace System.Web.Http.OData.Query
         {
             ODataValidationSettings settings = new ODataValidationSettings() { AllowedFunctions = AllowedFunctions.AllDateTimeFunctions };
             ODataQueryContext context = ValidationTestHelper.CreateCustomerContext();
-            FilterQueryOption option = new FilterQueryOption("substring(Name,8,1) eq '7'", context);
+            FilterQueryOption option = new FilterQueryOption("substring(Name,8,1) eq '7'", context, null);
 
             Assert.Throws<ODataException>(() =>
                 option.Validate(settings),
@@ -294,7 +294,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             var model = new ODataModelBuilder().Add_Customer_EntityType_With_CollectionProperties().Add_Customers_EntitySet().Add_Address_ComplexType().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context);
+            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context, null);
 
             // Act & Assert
             Assert.ThrowsArgumentNull(() => filter.ApplyTo(null, new ODataQuerySettings()), "query");
@@ -306,7 +306,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             var model = new ODataModelBuilder().Add_Customer_EntityType_With_CollectionProperties().Add_Customers_EntitySet().Add_Address_ComplexType().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context);
+            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context, null);
 
             // Act & Assert
             Assert.ThrowsArgumentNull(() => filter.ApplyTo(new Customer[0].AsQueryable(), null), "querySettings");
@@ -318,7 +318,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             var model = new ODataModelBuilder().Add_Customer_EntityType_With_CollectionProperties().Add_Customers_EntitySet().Add_Address_ComplexType().GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context);
+            var filter = new FilterQueryOption("Addresses/any(a: a/HouseNumber eq 1)", context, null);
 
             // Act & Assert
             Assert.ThrowsArgumentNull(() => filter.ApplyTo(new Customer[0].AsQueryable(), new ODataQuerySettings(), null), "assembliesResolver");
@@ -337,7 +337,7 @@ namespace System.Web.Http.OData.Query
                             .Add_Customers_EntitySet()
                             .GetEdmModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var filterOption = new FilterQueryOption(filter, context);
+            var filterOption = new FilterQueryOption(filter, context, null);
             IEnumerable<Customer> customers = CustomerFilterTestData;
 
             // Act
@@ -358,7 +358,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             var model = GetEnumModel();
             var context = new ODataQueryContext(model, typeof(EnumModel));
-            var filterOption = new FilterQueryOption(filter, context);
+            var filterOption = new FilterQueryOption(filter, context, null);
             IEnumerable<EnumModel> enumModels = EnumModelTestData;
 
             // Act
@@ -392,7 +392,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             var model = GetEnumModel();
             var context = new ODataQueryContext(model, typeof(EnumModel));
-            var filterOption = new FilterQueryOption(filter, context);
+            var filterOption = new FilterQueryOption(filter, context, null);
             IEnumerable<EnumModel> enumModels = EnumModelTestData;
 
             // Act
@@ -408,7 +408,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             CustomersModelWithInheritance model = new CustomersModelWithInheritance();
             ODataQueryContext context = new ODataQueryContext(model.Model, model.Customer);
-            FilterQueryOption filter = new FilterQueryOption("ID eq 42", context);
+            FilterQueryOption filter = new FilterQueryOption("ID eq 42", context, null);
 
             // Act & Assert
             Assert.NotNull(filter.FilterClause);
@@ -419,7 +419,7 @@ namespace System.Web.Http.OData.Query
         {
             CustomersModelWithInheritance model = new CustomersModelWithInheritance();
             ODataQueryContext context = new ODataQueryContext(model.Model, model.Customer);
-            FilterQueryOption filter = new FilterQueryOption("Id eq 42", context);
+            FilterQueryOption filter = new FilterQueryOption("ID eq 42", context, null);
             IQueryable queryable = new Mock<IQueryable>().Object;
 
             Assert.Throws<NotSupportedException>(() => filter.ApplyTo(queryable, new ODataQuerySettings()),

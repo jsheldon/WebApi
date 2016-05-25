@@ -118,7 +118,7 @@ namespace System.Web.Http.OData.Query
         {
             var model = new ODataModelBuilder().Add_Customer_EntityType().Add_Customers_EntitySet().GetServiceModel();
             var context = new ODataQueryContext(model, typeof(Customer));
-            var orderbyOption = new OrderByQueryOption("Name", context);
+            var orderbyOption = new OrderByQueryOption("Name", context, queryTranslator: null);
             var skipOption = new SkipQueryOption("1", context);
 
             var customers = (new List<Customer>{

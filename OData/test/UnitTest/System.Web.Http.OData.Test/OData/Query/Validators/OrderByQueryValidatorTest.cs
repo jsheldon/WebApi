@@ -29,14 +29,14 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateThrowsOnNullSettings()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                _validator.Validate(new OrderByQueryOption("Name eq 'abc'", _context), null));
+                _validator.Validate(new OrderByQueryOption("Name eq 'abc'", _context, queryTranslator: null), null));
         }
 
         [Fact]
         public void ValidateWillNotAllowName()
         {
             // Arrange
-            OrderByQueryOption option = new OrderByQueryOption("Name", _context);
+            OrderByQueryOption option = new OrderByQueryOption("Name", _context, queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings();
             settings.AllowedOrderByProperties.Add("Id");
 
@@ -49,7 +49,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateWillNotAllowMultipleProperties()
         {
             // Arrange
-            OrderByQueryOption option = new OrderByQueryOption("Name desc, Id asc", _context);
+            OrderByQueryOption option = new OrderByQueryOption("Name desc, Id asc", _context, queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings();
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
 
@@ -65,7 +65,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateWillAllowId()
         {
             // Arrange
-            OrderByQueryOption option = new OrderByQueryOption("Id", _context);
+            OrderByQueryOption option = new OrderByQueryOption("Id", _context, queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings();
             settings.AllowedOrderByProperties.Add("Id");
 
@@ -77,7 +77,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateAllowsOrderByIt()
         {
             // Arrange
-            OrderByQueryOption option = new OrderByQueryOption("$it", new ODataQueryContext(EdmCoreModel.Instance, typeof(int)));
+            OrderByQueryOption option = new OrderByQueryOption("$it", new ODataQueryContext(EdmCoreModel.Instance, typeof(int)), queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings();
 
             // Act & Assert
@@ -88,7 +88,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateAllowsOrderByIt_IfExplicitlySpecified()
         {
             // Arrange
-            OrderByQueryOption option = new OrderByQueryOption("$it", new ODataQueryContext(EdmCoreModel.Instance, typeof(int)));
+            OrderByQueryOption option = new OrderByQueryOption("$it", new ODataQueryContext(EdmCoreModel.Instance, typeof(int)), queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings { AllowedOrderByProperties = { "$it" } };
 
             // Act & Assert
@@ -100,7 +100,7 @@ namespace System.Web.Http.OData.Query.Validators
         {
             // Arrange
             _context = new ODataQueryContext(EdmCoreModel.Instance, typeof(int));
-            OrderByQueryOption option = new OrderByQueryOption("$it", _context);
+            OrderByQueryOption option = new OrderByQueryOption("$it", _context, queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings();
             settings.AllowedOrderByProperties.Add("dummy");
 
@@ -114,7 +114,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void Validate_ThrowsCountExceeded()
         {
             // Arrange
-            OrderByQueryOption option = new OrderByQueryOption("Name desc, Id asc", _context);
+            OrderByQueryOption option = new OrderByQueryOption("Name desc, Id asc", _context, queryTranslator: null);
             ODataValidationSettings settings = new ODataValidationSettings { MaxOrderByNodeCount = 1 };
 
             // Act & Assert

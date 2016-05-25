@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory),WebApiOData.sln))\tools\WebStack.settings.targets" />
   <PropertyGroup>
     <ProjectGuid>{D344485F-F8CA-4B02-AF3D-D9C6FD556CA9}</ProjectGuid>
@@ -10,6 +10,8 @@
     <OutputPath>..\..\..\bin\$(Configuration)\UnitTest\</OutputPath>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -380,7 +382,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\System.Web.Http.OData\System.Web.Http.OData.csproj">
-      <Project>{CF73AAA7-ACE9-4C91-AFA5-5EC1DF18FEEE}</Project>
+      <Project>{cf73aaa7-ace9-4c91-afa5-5ec1df18feee}</Project>
       <Name>System.Web.Http.OData</Name>
     </ProjectReference>
     <ProjectReference Include="..\Microsoft.TestCommon\Microsoft.TestCommon.csproj">

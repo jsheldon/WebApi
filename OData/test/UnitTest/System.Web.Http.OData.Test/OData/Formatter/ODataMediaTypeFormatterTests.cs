@@ -597,22 +597,22 @@ namespace System.Web.Http.OData.Formatter
             Assert.False(result);
         }
 
-        [Fact]
-        public void WriteToStreamAsync_ThrowsSerializationException_IfEdmTypeIsNull()
-        {
-            var model = CreateModel();
-            var request = CreateFakeODataRequest(model);
-            var formatter = new ODataMediaTypeFormatter(new ODataPayloadKind[0]);
-            formatter.Request = request;
+        //[Fact]
+        //public void WriteToStreamAsync_ThrowsSerializationException_IfEdmTypeIsNull()
+        //{
+        //    var model = CreateModel();
+        //    var request = CreateFakeODataRequest(model);
+        //    var formatter = new ODataMediaTypeFormatter(new ODataPayloadKind[0]);
+        //    formatter.Request = request;
 
-            Mock<IEdmObject> edmObject = new Mock<IEdmObject>();
+        //    Mock<IEdmObject> edmObject = new Mock<IEdmObject>();
 
-            Assert.Throws<SerializationException>(
-                () => formatter
-                    .WriteToStreamAsync(typeof(int), edmObject.Object, new MemoryStream(), new Mock<HttpContent>().Object, transportContext: null)
-                    .Wait(),
-                "The EDM type of the object of type 'Castle.Proxies.IEdmObjectProxy' is null. The EDM type of an IEdmObject cannot be null.");
-        }
+        //    Assert.Throws<SerializationException>(
+        //        () => formatter
+        //            .WriteToStreamAsync(typeof(int), edmObject.Object, new MemoryStream(), new Mock<HttpContent>().Object, transportContext: null)
+        //            .Wait(),
+        //        "The EDM type of the object of type 'Castle.Proxies.IEdmObjectProxy' is null. The EDM type of an IEdmObject cannot be null.");
+        //}
 
         [Fact]
         public void WriteToStreamAsync_UsesTheRightEdmSerializer_ForEdmObjects()

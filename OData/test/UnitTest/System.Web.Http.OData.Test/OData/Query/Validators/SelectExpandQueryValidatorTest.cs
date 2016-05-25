@@ -31,7 +31,7 @@ namespace System.Web.Http.OData.Query.Validators
         {
             // Arrange
             SelectExpandQueryValidator validator = new SelectExpandQueryValidator();
-            SelectExpandQueryOption selectExpandQueryOption = new SelectExpandQueryOption(null, expand, _queryContext);
+            SelectExpandQueryOption selectExpandQueryOption = new SelectExpandQueryOption(null, expand, _queryContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(
@@ -48,7 +48,7 @@ namespace System.Web.Http.OData.Query.Validators
         {
             string expand = "Orders/Customer/Orders/Customer/Orders/Customer";
             SelectExpandQueryValidator validator = new SelectExpandQueryValidator();
-            SelectExpandQueryOption selectExpandQueryOption = new SelectExpandQueryOption(null, expand, _queryContext);
+            SelectExpandQueryOption selectExpandQueryOption = new SelectExpandQueryOption(null, expand, _queryContext, queryTranslator: null);
 
             Assert.DoesNotThrow(
                 () => validator.Validate(selectExpandQueryOption, new ODataValidationSettings { MaxExpansionDepth = 0 }));

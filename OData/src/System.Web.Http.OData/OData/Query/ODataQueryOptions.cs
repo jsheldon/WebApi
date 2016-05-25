@@ -11,6 +11,7 @@ using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Web.Http.Dependencies;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.OData.Extensions;
 using System.Web.Http.OData.Formatter;
@@ -67,7 +68,16 @@ namespace System.Web.Http.OData.Query
                 _assembliesResolver = request.GetConfiguration().Services.GetAssembliesResolver();
             }
 
-            var dependencyScope = request.GetDependencyScope();
+            IDependencyScope dependencyScope = null;
+            try
+            {
+                dependencyScope = request.GetDependencyScope();
+            }
+            catch
+            {
+                
+            }
+
             if (dependencyScope != null)
             {
                 _queryTranslator = (IQueryTranslator)dependencyScope.GetService(typeof(IQueryTranslator));

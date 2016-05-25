@@ -23,7 +23,7 @@ namespace System.Web.Http.OData.Query
         public void Ctor_ThrowsArgumentNull_Context()
         {
             Assert.ThrowsArgumentNull(
-                () => new SelectExpandQueryOption(select: "select", expand: "expand", context: null),
+                () => new SelectExpandQueryOption(select: "select", expand: "expand", context: null, queryTranslator: null),
                 "context");
         }
 
@@ -34,7 +34,7 @@ namespace System.Web.Http.OData.Query
             ODataQueryContext context = new ODataQueryContext(_model.Model, typeof(Customer));
 
             Assert.Throws<ArgumentException>(
-                () => new SelectExpandQueryOption(select: null, expand: null, context: context),
+                () => new SelectExpandQueryOption(select: null, expand: null, context: context, queryTranslator: null),
                 "'select' and 'expand' cannot be both null or empty.");
         }
 
@@ -44,7 +44,7 @@ namespace System.Web.Http.OData.Query
             ODataQueryContext context = new ODataQueryContext(_model.Model, typeof(int));
 
             Assert.ThrowsArgument(
-                () => new SelectExpandQueryOption(select: "Name", expand: "Name", context: context),
+                () => new SelectExpandQueryOption(select: "Name", expand: "Name", context: context, queryTranslator: null),
                 "context",
                 "The type 'Edm.Int32' is not an entity type. Only entity types support $select and $expand.");
         }
@@ -58,7 +58,7 @@ namespace System.Web.Http.OData.Query
             ODataQueryContext context = new ODataQueryContext(_model.Model, typeof(Customer));
 
             // Act
-            SelectExpandQueryOption result = new SelectExpandQueryOption(selectValue, expand: null, context: context);
+            SelectExpandQueryOption result = new SelectExpandQueryOption(selectValue, expand: null, context: context, queryTranslator: null);
 
             // Assert
             Assert.Equal(selectValue, result.RawSelect);
@@ -73,7 +73,7 @@ namespace System.Web.Http.OData.Query
             ODataQueryContext context = new ODataQueryContext(_model.Model, typeof(Customer));
 
             // Act
-            SelectExpandQueryOption result = new SelectExpandQueryOption(select: null, expand: expandValue, context: context);
+            SelectExpandQueryOption result = new SelectExpandQueryOption(select: null, expand: expandValue, context: context, queryTranslator: null);
 
             // Assert
             Assert.Equal(expandValue, result.RawExpand);
@@ -86,7 +86,7 @@ namespace System.Web.Http.OData.Query
             IEdmModel model = _model.Model;
             _model.Model.SetAnnotationValue<ClrTypeAnnotation>(_model.Customer, new ClrTypeAnnotation(typeof(Customer)));
             ODataQueryContext context = new ODataQueryContext(model, typeof(Customer));
-            SelectExpandQueryOption option = new SelectExpandQueryOption("ID,Name,Orders", "Orders", context);
+            SelectExpandQueryOption option = new SelectExpandQueryOption("ID,Name,Orders", "Orders", context, queryTranslator: null);
 
             // Act
             SelectExpandClause selectExpandClause = option.SelectExpandClause;
@@ -114,7 +114,7 @@ namespace System.Web.Http.OData.Query
             IEdmModel model = builder.GetEdmModel();
 
             ODataQueryContext context = new ODataQueryContext(model, typeof(Customer));
-            SelectExpandQueryOption option = new SelectExpandQueryOption(select, expand, context);
+            SelectExpandQueryOption option = new SelectExpandQueryOption(select, expand, context, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => option.SelectExpandClause.ToString());
@@ -132,7 +132,7 @@ namespace System.Web.Http.OData.Query
             IEdmModel model = _model.Model;
             _model.Model.SetAnnotationValue<ClrTypeAnnotation>(_model.Customer, new ClrTypeAnnotation(typeof(Customer)));
             ODataQueryContext context = new ODataQueryContext(model, typeof(Customer));
-            SelectExpandQueryOption option = new SelectExpandQueryOption(select, expand, context);
+            SelectExpandQueryOption option = new SelectExpandQueryOption(select, expand, context, queryTranslator: null);
 
             // Act
             Assert.Throws<ODataException>(
@@ -146,7 +146,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             CustomersModelWithInheritance model = new CustomersModelWithInheritance();
             ODataQueryContext context = new ODataQueryContext(model.Model, model.Customer);
-            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: context);
+            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: context, queryTranslator: null);
 
             // Act & Assert
             Assert.NotNull(selectExpand.SelectExpandClause);
@@ -158,7 +158,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             CustomersModelWithInheritance model = new CustomersModelWithInheritance();
             ODataQueryContext context = new ODataQueryContext(model.Model, model.Customer);
-            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: context);
+            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: context, queryTranslator: null);
             IQueryable queryable = new Mock<IQueryable>().Object;
 
             // Act & Assert
@@ -172,7 +172,7 @@ namespace System.Web.Http.OData.Query
             // Arrange
             CustomersModelWithInheritance model = new CustomersModelWithInheritance();
             ODataQueryContext context = new ODataQueryContext(model.Model, model.Customer);
-            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: context);
+            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: context, queryTranslator: null);
             object entity = new object();
 
             // Act & Assert

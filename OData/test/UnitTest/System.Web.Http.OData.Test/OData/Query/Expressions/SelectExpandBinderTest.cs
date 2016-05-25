@@ -33,7 +33,7 @@ namespace System.Web.Http.OData.Query.Expressions
             _model.Model.SetAnnotationValue<ClrTypeAnnotation>(_model.Customer, new ClrTypeAnnotation(typeof(Customer)));
             _model.Model.SetAnnotationValue<ClrTypeAnnotation>(_model.SpecialCustomer, new ClrTypeAnnotation(typeof(SpecialCustomer)));
             _context = new ODataQueryContext(_model.Model, typeof(Customer));
-            _binder = new SelectExpandBinder(_settings, new SelectExpandQueryOption("*", "", _context));
+            _binder = new SelectExpandBinder(_settings, new SelectExpandQueryOption("*", "", _context, null));
 
             Customer customer = new Customer();
             Order order = new Order { Customer = customer };
@@ -46,7 +46,7 @@ namespace System.Web.Http.OData.Query.Expressions
         public void Bind_ReturnsIEdmObject_WithRightEdmType()
         {
             // Arrange
-            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: _context);
+            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption(select: "ID", expand: null, context: _context, queryTranslator: null);
 
             // Act
             IQueryable queryable = SelectExpandBinder.Bind(_queryable, _settings, selectExpand);
@@ -63,7 +63,7 @@ namespace System.Web.Http.OData.Query.Expressions
         public void Bind_GeneratedExpression_ContainsExpandedObject()
         {
             // Arrange
-            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption("Orders,Orders/Customer", "Orders,Orders/Customer", _context);
+            SelectExpandQueryOption selectExpand = new SelectExpandQueryOption("Orders,Orders/Customer", "Orders,Orders/Customer", _context, null);
 
             // Act
             IQueryable queryable = SelectExpandBinder.Bind(_queryable, _settings, selectExpand);

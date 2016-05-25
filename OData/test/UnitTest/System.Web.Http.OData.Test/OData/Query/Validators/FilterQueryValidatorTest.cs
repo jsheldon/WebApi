@@ -440,7 +440,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateThrowsOnNullSettings()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                _validator.Validate(new FilterQueryOption("Name eq 'abc'", _context), null));
+                _validator.Validate(new FilterQueryOption("Name eq 'abc'", _context, queryTranslator: null), null));
         }
 
         // want to test if all the virtual methods are being invoked correctly
@@ -448,7 +448,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateVisitAll()
         {
             // Arrange
-            FilterQueryOption option = new FilterQueryOption("Tags/all(t: t eq '42')", _context);
+            FilterQueryOption option = new FilterQueryOption("Tags/all(t: t eq '42')", _context, queryTranslator: null);
 
             // Act
             _validator.Validate(option, _settings);
@@ -468,7 +468,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateVisitAny()
         {
             // Arrange
-            FilterQueryOption option = new FilterQueryOption("Tags/any(t: t eq '42')", _context);
+            FilterQueryOption option = new FilterQueryOption("Tags/any(t: t eq '42')", _context, queryTranslator: null);
 
             // Act
             _validator.Validate(option, _settings);
@@ -493,7 +493,7 @@ namespace System.Web.Http.OData.Query.Validators
             settings.MaxAnyAllExpressionDepth = 1;
 
             // Act & Assert
-            Assert.Throws<ODataException>(() => _validator.Validate(new FilterQueryOption(filter, _productContext), settings), "The Any/All nesting limit of '1' has been exceeded. 'MaxAnyAllExpressionDepth' can be configured on ODataQuerySettings or EnableQueryAttribute.");
+            Assert.Throws<ODataException>(() => _validator.Validate(new FilterQueryOption(filter, _productContext, queryTranslator: null), settings), "The Any/All nesting limit of '1' has been exceeded. 'MaxAnyAllExpressionDepth' can be configured on ODataQuerySettings or EnableQueryAttribute.");
         }
 
         [Theory]
@@ -505,7 +505,7 @@ namespace System.Web.Http.OData.Query.Validators
             settings.MaxAnyAllExpressionDepth = 2;
 
             // Act & Assert
-            Assert.DoesNotThrow(() => _validator.Validate(new FilterQueryOption(filter, _productContext), settings));
+            Assert.DoesNotThrow(() => _validator.Validate(new FilterQueryOption(filter, _productContext, queryTranslator: null), settings));
         }
 
         [Theory]
@@ -518,7 +518,7 @@ namespace System.Web.Http.OData.Query.Validators
                 MaxAnyAllExpressionDepth = Int32.MaxValue
             };
 
-            FilterQueryOption option = new FilterQueryOption(filter, _productContext);
+            FilterQueryOption option = new FilterQueryOption(filter, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), "The node count limit of '100' has been exceeded. To increase the limit, set the 'MaxNodeCount' property on EnableQueryAttribute or ODataValidationSettings.");
@@ -535,7 +535,7 @@ namespace System.Web.Http.OData.Query.Validators
                 MaxNodeCount = 105,
             };
 
-            FilterQueryOption option = new FilterQueryOption(filter, _productContext);
+            FilterQueryOption option = new FilterQueryOption(filter, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -551,7 +551,7 @@ namespace System.Web.Http.OData.Query.Validators
                 MaxAnyAllExpressionDepth = Int32.MaxValue
             };
 
-            FilterQueryOption option = new FilterQueryOption(filter, _productContext);
+            FilterQueryOption option = new FilterQueryOption(filter, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -598,7 +598,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedArithmeticOperators = allow,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -617,7 +617,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Arithmetic operator '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedArithmeticOperators' property on EnableQueryAttribute or QueryValidationSettings.",
                 operatorName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -636,7 +636,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Arithmetic operator '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedArithmeticOperators' property on EnableQueryAttribute or QueryValidationSettings.",
                 operatorName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -651,7 +651,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedFunctions = AllowedFunctions.Day,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -669,7 +669,7 @@ namespace System.Web.Http.OData.Query.Validators
             var expectedMessage = string.Format(
                 "Function 'day' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.");
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -728,7 +728,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedFunctions = allow,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -750,7 +750,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Function '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -772,7 +772,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Function '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -787,7 +787,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedFunctions = AllowedFunctions.AllDateTimeFunctions,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -806,7 +806,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Function '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -821,7 +821,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedFunctions = AllowedFunctions.AllMathFunctions,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -840,7 +840,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Function '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -855,7 +855,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedFunctions = AllowedFunctions.AllStringFunctions,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -874,7 +874,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Function '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -893,7 +893,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "An unknown function with name '{0}' was found. " +
                 "This may also be a key lookup on a navigation property, which is not allowed.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -911,7 +911,7 @@ namespace System.Web.Http.OData.Query.Validators
             var expectedMessage = string.Format(
                 "The child type '{0}' in a cast was not an entity type. Casts can only be performed on entity types.",
                 targetType);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -928,7 +928,7 @@ namespace System.Web.Http.OData.Query.Validators
             };
             var expectedMessage =
                 "Validating OData QueryNode of kind SingleEntityFunctionCall is not supported by FilterQueryValidator.";
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<NotSupportedException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -944,7 +944,7 @@ namespace System.Web.Http.OData.Query.Validators
                 AllowedFunctions = AllowedFunctions.None,
             };
             var expectedMessage = "Cast or IsOf Function must have a type in its arguments.";
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -963,7 +963,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Encountered invalid type cast. '{0}' is not assignable from '{1}'.",
                 typeof(DerivedCategory).FullName,
                 typeof(Product).FullName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -978,7 +978,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedFunctions = outer | inner,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -997,7 +997,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Function '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedFunctions' property on EnableQueryAttribute or QueryValidationSettings.",
                 functionName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -1043,7 +1043,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedLogicalOperators = allow,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -1062,7 +1062,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Logical operator '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedLogicalOperators' property on EnableQueryAttribute or QueryValidationSettings.",
                 operatorName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -1081,7 +1081,7 @@ namespace System.Web.Http.OData.Query.Validators
                 "Logical operator '{0}' is not allowed. " +
                 "To allow it, set the 'AllowedLogicalOperators' property on EnableQueryAttribute or QueryValidationSettings.",
                 operatorName);
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -1096,7 +1096,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedArithmeticOperators = AllowedArithmeticOperators.Add,
             };
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -1114,7 +1114,7 @@ namespace System.Web.Http.OData.Query.Validators
             var expectedMessage = string.Format(
                 "Arithmetic operator 'Add' is not allowed. " +
                 "To allow it, set the 'AllowedArithmeticOperators' property on EnableQueryAttribute or QueryValidationSettings.");
-            var option = new FilterQueryOption(query, _productContext);
+            var option = new FilterQueryOption(query, _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -1128,7 +1128,7 @@ namespace System.Web.Http.OData.Query.Validators
             {
                 AllowedLogicalOperators = AllowedLogicalOperators.LessThan | AllowedLogicalOperators.Not,
             };
-            var option = new FilterQueryOption("-UnitPrice lt 0", _productContext);
+            var option = new FilterQueryOption("-UnitPrice lt 0", _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, settings));
@@ -1146,7 +1146,7 @@ namespace System.Web.Http.OData.Query.Validators
             var expectedMessage = string.Format(
                 "Logical operator 'Negate' is not allowed. " +
                 "To allow it, set the 'AllowedLogicalOperators' property on EnableQueryAttribute or QueryValidationSettings.");
-            var option = new FilterQueryOption("-UnitPrice lt 0", _productContext);
+            var option = new FilterQueryOption("-UnitPrice lt 0", _productContext, queryTranslator: null);
 
             // Act & Assert
             Assert.Throws<ODataException>(() => _validator.Validate(option, settings), expectedMessage);
@@ -1156,7 +1156,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void ValidateVisitLogicalOperatorEqual()
         {
             // Arrange
-            FilterQueryOption option = new FilterQueryOption("Id eq 1", _context);
+            FilterQueryOption option = new FilterQueryOption("Id eq 1", _context, queryTranslator: null);
 
             // Act
             _validator.Validate(option, _settings);
@@ -1209,7 +1209,7 @@ namespace System.Web.Http.OData.Query.Validators
         public void Validator_Doesnot_Throw_For_ValidQueries(string filter)
         {
             // Arrange
-            FilterQueryOption option = new FilterQueryOption(filter, _context);
+            FilterQueryOption option = new FilterQueryOption(filter, _context, queryTranslator: null);
 
             // Act & Assert
             Assert.DoesNotThrow(() => _validator.Validate(option, _settings));
