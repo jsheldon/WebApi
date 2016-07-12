@@ -293,6 +293,8 @@ namespace System.Web.Http.OData.Query
                     }
                     else
                     {
+                        var translator = new ExpressionTranslator<TSource, TDestination>(_queryTranslator);
+                        property = translator.TranslateProperty(property);
                         querySoFar = ExpressionHelpers.OrderByProperty(querySoFar, property, direction, typeof(TSource), alreadyOrdered) as IQueryable<TSource>;
                     }
                     alreadyOrdered = true;
