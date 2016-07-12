@@ -136,7 +136,7 @@ namespace System.Web.Http.OData.Query
         /// <returns></returns>
         public IQueryable<TSource> Translate<TSource>(IQueryable<TSource> result, ODataQuerySettings querySettings)
         {
-            return result;
+            return result.Skip(Value);
         }
     }
 }
