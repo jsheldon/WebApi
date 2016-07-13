@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Web.Http.OData.Query.Translator;
 using Microsoft.Data.Edm;
@@ -34,6 +35,13 @@ namespace System.Web.Http.OData.Query
             var model = GetEdmModel();
             var type = _queryTranslator.GetEdmType<TSource, TDestination>();
             return ODataUriParser.ParseOrderBy(translatedExpression, model, type);
+        }
+
+        public IEdmProperty TranslateProperty(IEdmProperty property)
+        {
+            var fieldName = _queryTranslator.TranslateField<TSource, TDestination>(property.Name);
+            var type = _queryTranslator.GetEdmType<TSource, TDestination>() as IEdmEntityType;
+            return type.DeclaredProperties.SingleOrDefault(p => p.Name == fieldName);
         }
 
         private string GetTranslatedExpression(OrderByClause expression)

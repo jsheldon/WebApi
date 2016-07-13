@@ -330,13 +330,13 @@ namespace System.Web.Http.OData.Query
                 // Instead of failing early here if we cannot generate the OrderBy,
                 // let the IQueryable backend fail (if it has to).
                 orderBy = orderBy == null
-                            ? GenerateDefaultOrderBy(Context)
-                            : EnsureStableSortOrderBy(orderBy, Context);
+                            ? GenerateDefaultOrderBy(Context, _queryTranslator)
+                            : EnsureStableSortOrderBy(orderBy, Context, _queryTranslator);
             }
 
             if (orderBy != null)
             {
-                result = OrderBy.Translate<TSource, TDestination>(result, querySettings);
+                result = orderBy.Translate<TSource, TDestination>(result, querySettings);
             }
 
             if (Skip != null)
@@ -547,12 +547,12 @@ namespace System.Web.Http.OData.Query
         // Generates the OrderByQueryOption to use by default for $skip or $top
         // when no other $orderby is available.  It will produce a stable sort.
         // This may return a null if there are no available properties.
-        private static OrderByQueryOption GenerateDefaultOrderBy(ODataQueryContext context)
+        private static OrderByQueryOption GenerateDefaultOrderBy(ODataQueryContext context, IQueryTranslator translator = null)
         {
             string orderByRaw = String.Join(",", GetAvailableOrderByProperties(context).Select(property => property.Name));
             return String.IsNullOrEmpty(orderByRaw)
                     ? null
-                    : new OrderByQueryOption(orderByRaw, context, null);
+                    : new OrderByQueryOption(orderByRaw, context, translator);
         }
 
         /// <summary>
@@ -564,8 +564,9 @@ namespace System.Web.Http.OData.Query
         /// </summary>
         /// <param name="orderBy">The <see cref="OrderByQueryOption"/> to evaluate.</param>
         /// <param name="context">The <see cref="ODataQueryContext"/>.</param>
+        /// <param name="translator"></param>
         /// <returns>An <see cref="OrderByQueryOption"/> that will produce a stable sort.</returns>
-        private static OrderByQueryOption EnsureStableSortOrderBy(OrderByQueryOption orderBy, ODataQueryContext context)
+        private static OrderByQueryOption EnsureStableSortOrderBy(OrderByQueryOption orderBy, ODataQueryContext context, IQueryTranslator translator = null)
         {
             Contract.Assert(orderBy != null);
             Contract.Assert(context != null);
@@ -583,7 +584,7 @@ namespace System.Web.Http.OData.Query
                 // Clone the given one and add the remaining properties to end, thereby making
                 // the sort stable but preserving the user's original intent for the major
                 // sort order.
-                orderBy = new OrderByQueryOption(orderBy.RawValue, context, null);
+                orderBy = new OrderByQueryOption(orderBy.RawValue, context, translator);
                 foreach (IEdmStructuralProperty property in propertiesToAdd)
                 {
                     orderBy.OrderByNodes.Add(new OrderByPropertyNode(property, OrderByDirection.Ascending));
